@@ -1,0 +1,302 @@
+<template>
+    <div class="mapDiv">
+        <div ref="mapDiv" id="mapDiv" class="mapDiv"></div>
+        <div id="layerControl" class="layerControl">
+            <div class="title"><label>图层列表</label></div>
+            <ul ref="layerTree" id="layerTree" class="layerTree"></ul>
+        </div>
+        <!-- <div id="toolDiv"> -->
+            <!-- <Dropdown>
+                <a href="javascript:void(0)">
+                    hover 触发
+                    <Icon type="ios-arrow-down"></Icon>
+                </a>
+                <DropdownMenu slot="list">
+                    <DropdownItem>驴打滚</DropdownItem>
+                    <DropdownItem>炸酱面</DropdownItem>
+                    <DropdownItem>豆汁儿</DropdownItem>
+                    <DropdownItem>冰糖葫芦</DropdownItem>
+                    <DropdownItem>北京烤鸭</DropdownItem>
+                </DropdownMenu>
+            </Dropdown> -->
+            <!-- <ul>
+                <li>放大</li>
+                <li>缩小</li>
+                <li>导出PDF</li>
+                <li>导出图片</li>
+            </ul> -->
+        <!-- </div> -->
+    </div>
+</template>
+<script>
+import"ol/ol.css"
+import Map from "ol/Map"
+import View from "ol/View"
+import TileLayer from "ol/layer/Tile"
+import XYZ from "ol/source/XYZ"
+import TileWms from "ol/source/TileWMS"
+import {defaults,ZoomToExtent,MousePosition,OverviewMap,ScaleLine} from "ol/control"
+import {createStringXY} from "ol/coordinate"
+export default {
+    name:'selectMap',
+    components: {
+        
+    },
+    data(){
+        return{
+            layer:[],
+            layerName:[],
+            layerVisibility:[]
+        }
+    },
+    mounted(){
+        this.initMap()
+    },
+    methods: {
+        initMap(){
+            //图层组
+            // var layers=new Array()
+            //图层名称
+            // var layerName=new Array()
+            //可见图层设置
+            // var layerVisibility=new Array()
+             /**
+         * 比例尺
+         */
+        var scaleLineControl= new ScaleLine({
+            // className: 'my-scale-line',
+            bar: true,
+            // text: true,
+            minWidth:70,
+            units: "metric"
+        })
+        /**
+         * 鼠标移动获取位置信息
+         */
+        var mousePositionControl = new MousePosition({
+            //坐标格式
+            coordinateFormat: createStringXY(4),
+            //地图投影坐标系（若未设置则输出为默认投影坐标系下的坐标）
+            projection: 'EPSG:2435',
+            //坐标信息显示样式类名，默认是'ol-mouse-position'
+            className: 'custom-mouse-position',
+            //显示鼠标位置信息的目标容器
+            // target: document.getElementById('mouse-position'),
+            //未定义坐标的标记
+            undefinedHTML: '&nbsp;'
+        })
+       
+
+            var tdtMap_cia=new TileLayer({
+                name:'天地图影像标记层',
+                source:new XYZ({
+                    url: "http://t0.tianditu.com/DataServer?T=cia_w&x={x}&y={y}&l={z}&tk=42dca576db031641be0524ee977ddd04",//parent.TiandituKey()为天地图密钥,
+                    wrapX: false
+                })
+            })
+            var tdtMap_vec=new TileLayer({
+                name:'天地图矢量图层',
+                source: new XYZ({
+                    url:"http://t0.tianditu.com/DataServer?T=vec_w&x={x}&y={y}&l={z}&tk=42dca576db031641be0524ee977ddd04",
+                    wrapX:false
+                })
+            })
+            var tdtMap_cva=new TileLayer({
+                name:'天地图矢量标记图层',
+                source:new XYZ({
+                    url:'http://t0.tianditu.com/DataServer?T=cva_w&x={x}&y={y}&l={z}&tk=42dca576db031641be0524ee977ddd04',
+                    wrapX:false
+                })
+            })
+            var tdtMap_img=new TileLayer({
+                name:'天地图影像图层',
+                source:new XYZ({
+                    url:'http://t0.tianditu.com/DataServer?T=img_w&x={x}&y={y}&l={z}&tk=42dca576db031641be0524ee977ddd04',
+                    wrapX:false
+                }),
+                visible:false
+            })
+             /**
+         * 鹰眼
+         */
+        var overviewMap = new OverviewMap({
+            className: 'ol-overviewmap ol-custom-overviewmap',
+            layers: [new TileLayer({
+                name:'天地图矢量标记图层',
+                source:new XYZ({
+                    url:'http://t0.tianditu.com/DataServer?T=cva_w&x={x}&y={y}&l={z}&tk=42dca576db031641be0524ee977ddd04',
+                    wrapX:false
+                })
+            })],
+        })
+            //实例化Map对象
+            var map= new Map({
+                target:'mapDiv',
+                layers:[tdtMap_vec,tdtMap_cva,tdtMap_img,tdtMap_cia],
+                view:new View({
+                    //地图中心点
+                    center:[0,0],
+                    // projection: 'EPSG:4326',
+                    zoom:4
+                }),
+                controls:defaults({
+                    attibuttonOptions:({
+                        collapsible: true
+                    })
+                }).extend([mousePositionControl,overviewMap])
+            })
+            map.addControl(scaleLineControl);
+            this.loadLayersControl(map,'layerTree')
+
+        },
+        /**
+         * 加载图层列表数据
+         * map地图数据
+         * 图层列表容器ID
+         */
+        loadLayersControl(map,id){
+            var treeContent=this.$refs.layerTree
+            var layers=map.getLayers()
+            for (let i = 0; i < layers.getLength(); i++) {
+                //获取每个图层的名称，是否可见属性
+                let item=layers.getArray()[i]
+                let itemName=item.get('name')
+                let itemVisibity=item.getVisible()
+                //新增li的元素，用来承载图层项
+                let eleLi=document.createElement('li')
+                eleLi.style="text-align: left;"
+                //添加子节点
+                treeContent.appendChild(eleLi)
+                //创建复选框元素
+                var eleInput=document.createElement('input')
+                eleInput.type="checkbox"
+                eleInput.name="layers"
+                eleLi.append(eleInput)
+                //创建label元素
+                var eleLabel=document.createElement('label')
+                eleLabel.className="layer"
+                //设置图层名称
+                this.setInnerText(eleLabel,itemName)
+                eleLi.appendChild(eleLabel)
+                //设置图层默认显示状态
+                if(itemVisibity){
+                    eleInput.checked=true
+                }
+                this.addChangeEvenr(eleInput,item)
+            }
+        },
+        addChangeEvenr(ele,layer){
+             ele.onclick=function () {
+                if (ele.checked) {
+                    layer.setVisible(true)
+                }else{
+                    layer.setVisible(false)
+                }
+            }
+
+        },
+        setInnerText(ele, text){
+           if (typeof ele.treeContent=="string") {
+               ele.textContent=text
+           }else{
+               ele.innerText=text
+           }
+        }
+
+    }
+
+}
+</script>
+<style lang="less" >
+
+.mapDiv{
+    width: 100%;
+    height: 100%;
+}
+/** */
+.toolDiv{
+    position: absolute;
+    left: 0px;
+    top: 5px;
+}
+
+/* 图层控件层样式设置 */
+.layerControl {
+    position: absolute;
+    bottom: 5px;
+    min-width: 200px;
+    max-height: 200px;
+    right: 0px;
+    top: 5px;
+    /*在地图容器中的层，要设置z-index的值让其显示在地图上层*/
+    z-index: 2001;
+    color: #ffffff;
+    background-color: #4c4e5a;
+    /*边缘的宽度*/
+    border-width: 10px;
+    /*圆角的大小 */
+    border-radius: 10px;
+    /*边框颜色*/
+    border-color: #000 #000 #000 #000;
+}
+
+.layerControl .title {
+    text-align: left;
+    font-weight: bold;
+    font-size: 15px;
+    margin: 10px;
+}
+
+.layerTree li {
+    text-align: left;
+    list-style: none;
+    margin: 5px 10px;
+}
+.ol-scale-step-text {
+    position: absolute;
+    bottom: -5px;
+    font-size: 12px;
+    z-Index: 11;
+    color: #000000;
+}
+
+
+/*=S 自定义鹰眼样式 */
+        // .ol-overviewmap {
+        //     right: 0.5em;
+        //     bottom: 0.5em;
+        // }
+        .ol-overviewmap,.ol-custom-overviewmap, .ol-custom-overviewmap.ol-uncollapsible {
+             bottom: 0;
+             left: auto;
+            /* 右侧显示 */
+             right: 0;
+            /* 顶部显示 */
+             top: auto;
+         
+        }
+        /* 鹰眼控件展开时控件外框的样式 */
+        .ol-custom-overviewmap:not(.ol-collapsed)  {
+            border: 1px solid black;
+        }
+         /* 鹰眼控件中地图容器样式 */
+        .ol-custom-overviewmap .ol-overviewmap-map {
+            border: none;
+            width: 300px;
+        }
+        /* 鹰眼控件中显示当前窗口中主图区域的边框 */
+        .ol-custom-overviewmap .ol-overviewmap-box {
+            border: 2px solid red;
+        }
+        /* 鹰眼控件展开时其控件按钮图标的样式 */
+        .ol-custom-overviewmap:not(.ol-collapsed) button{
+            bottom: auto;
+            left: auto;
+            right: 1px;
+            top: 1px;
+        }
+      
+        /*=E 自定义鹰眼样式 */
+
+
+</style>
