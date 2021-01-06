@@ -48,13 +48,52 @@ export default {
                     alert('当前范围'+extent[0]+","+extent[1]+","+extent[2]+","+extent[3])
                     break;
                 case 'png':
-                   
-                   this.map.once('postcompose',(event)=>{
-                       debugger
-                        let canvas=event.context.canvas
-                        canvas.toBlob((blob)=>{
-                            saveAs(blob,'map.png')
-                        })
+                   this.map.once('rendercomplete',(event)=>{
+                      let mapCanvas=document.createElement('canvas')
+                      let size=this.map.getSize()
+                      mapCanvas.width=size[0]
+                      mapCanvas.height=size[1]
+                      let mapContext=mapCanvas.getContext('2d')
+                      Array.prototype.forEach.call(
+                          document.querySelectorAll('.ol-layer canvas'),(canvas)=>{
+                              if(canvas.width>0){
+                                   let opacity=canvas.parentNode.style.opacity
+                                    mapContext.globalAlpha=opacity===''?1:Number(opacity)
+                                    let transform=canvas.style.transform
+                                    let matrix=transform.match(/^matrix\(([^\(]*)\)$/)[1].split(',').map(Number)
+
+                                    CanvasRenderingContext2D.prototype.setTransform.apply(mapContext,matrix)
+                                    mapContext.drawImage(canvas,0,0)
+                              }
+                             
+                          })
+                          debugger
+                        //   if (window.navigator.msSaveOrOpenBlob) {
+                        //         const bstr = atob(imgUrl.split(',')[1])
+                        //         let n = bstr.length
+                        //         const u8arr = new Uint8Array(n)
+                        //         while (n--) {
+                        //         u8arr[n] = bstr.charCodeAt(n)
+                        //         }
+                        //         const blob = new Blob([u8arr])
+                        //         window.navigator.msSaveOrOpenBlob(blob, 'chart-download' + '.' + 'png')
+                        //     } else {
+                        //         // 这里就按照chrome等新版浏览器来处理
+                        //         const a = document.createElement('a')
+                        //         a.href = mapCanvas.toDataURL()
+                        //         a.setAttribute('download', 'chart-download')
+                        //         a.click()
+                        //     }
+                          debugger
+                          if(navigator.msSaveBlob){
+                              navigator.msSaveBlob(mapCanvas.msToBlob(),'map.png')
+                          }else{
+                              debugger
+                               const a = document.createElement('a')
+                                a.href = mapCanvas.toDataURL()
+                                a.setAttribute('download', 'map')
+                                a.click()
+                          }
                     })
                     this.map.renderSync()
                     
