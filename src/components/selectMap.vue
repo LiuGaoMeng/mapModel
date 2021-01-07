@@ -1,12 +1,33 @@
 <template>
     <div class="mapDiv">
-        <div ref="mapDiv" id="mapDiv" class="mapDiv"></div>
+        <div ref="mapDiv"  class="mapDiv"></div>
         <div id="layerControl" class="layerControl">
             <div class="title"><label>图层列表</label></div>
             <ul ref="layerTree" id="layerTree" class="layerTree"></ul>
         </div>
         <MapTool></MapTool>
+        <Modal v-if='this.selectpdf' title="pdf选项" @on-ok='exportPdf' @on-cancel='cancelPdf' width="600">
+            <Form>
+                <Row>
+                   
+                    <FormItem label='尺寸'>
+                        <Select v-model='a1'>
+                            <Option v-for='item in pageSize' :value='item.value' :key='item.value'>item.name</Option>
+                        </Select>
+                    </FormItem>
+                   
+                </Row>
+                <Row>
+                   
+                    <FormItem label='分辨率'>
+                        <Select></Select>
+                    </FormItem>
+                    
+                </Row>
+            </Form>
+        </Modal>
     </div>
+
 </template>
 <script>
 import"ol/ol.css"
@@ -18,7 +39,7 @@ import TileWms from "ol/source/TileWMS"
 import {defaults,ZoomToExtent,MousePosition,OverviewMap,ScaleLine} from "ol/control"
 import {createStringXY} from "ol/coordinate"
 import MapTool from "../views/MapTool"
-import bus from "@/utils/bus";
+import bus from "@/utils/bus"
 export default {
     name:'selectMap',
     components: {
@@ -30,6 +51,30 @@ export default {
             layerName:[],
             layerVisibility:[],
             map:null,
+            a1:'a4',
+            selectpdf:false,
+            pageSize:[
+                {
+                    name:'A1',
+                    value:'a1'
+                },
+                {
+                    name:'A2',
+                    value:'a2'
+                },
+                {
+                    name:'A3',
+                    value:'a3'
+                },
+                {
+                    name:'A4',
+                    value:'a4'
+                },
+                {
+                    name:'A5',
+                    value:'a5'
+                },
+            ]
         }
     },
     created(){
@@ -67,7 +112,6 @@ export default {
                               }
                              
                           })
-                          debugger
                         //   if (window.navigator.msSaveOrOpenBlob) {
                         //         const bstr = atob(imgUrl.split(',')[1])
                         //         let n = bstr.length
@@ -84,11 +128,10 @@ export default {
                         //         a.setAttribute('download', 'chart-download')
                         //         a.click()
                         //     }
-                          debugger
+                          
                           if(navigator.msSaveBlob){
                               navigator.msSaveBlob(mapCanvas.msToBlob(),'map.png')
                           }else{
-                              debugger
                                const a = document.createElement('a')
                                 a.href = mapCanvas.toDataURL()
                                 a.setAttribute('download', 'map')
@@ -99,6 +142,8 @@ export default {
                     
                     break;
                 case 'pdf':
+                    debugger
+                    this.selectpdf=true
                     
                     break;
                 case 'watch':
@@ -196,7 +241,7 @@ export default {
                 name:'天地图影像标记层',
                 
                 source:new XYZ({
-                    url: "http://t0.tianditu.com/DataServer?T=cia_w&x={x}&y={y}&l={z}&tk=42dca576db031641be0524ee977ddd04",//parent.TiandituKey()为天地图密钥,
+                    url: "http://t0.tianditu.com/DataServer?T=cia_w&x={x}&y={y}&l={z}&tk=cc7ce3abb37b17aa5395b13b2980287e",//parent.TiandituKey()为天地图密钥,
                     crossOrigin: 'anonymous',
                     wrapX: false
                 })
@@ -205,7 +250,7 @@ export default {
                 name:'天地图矢量图层',
                 
                 source: new XYZ({
-                    url:"http://t0.tianditu.com/DataServer?T=vec_w&x={x}&y={y}&l={z}&tk=42dca576db031641be0524ee977ddd04",
+                    url:"http://t0.tianditu.com/DataServer?T=vec_w&x={x}&y={y}&l={z}&tk=cc7ce3abb37b17aa5395b13b2980287e",
                     crossOrigin: 'anonymous',
                     wrapX:false
                 })
@@ -213,7 +258,7 @@ export default {
             var tdtMap_cva=new TileLayer({
                 name:'天地图矢量标记图层',
                 source:new XYZ({
-                    url:'http://t0.tianditu.com/DataServer?T=cva_w&x={x}&y={y}&l={z}&tk=42dca576db031641be0524ee977ddd04',
+                    url:'http://t0.tianditu.com/DataServer?T=cva_w&x={x}&y={y}&l={z}&tk=cc7ce3abb37b17aa5395b13b2980287e',
                     crossOrigin: 'anonymous',
                     wrapX:false
                 })
@@ -221,7 +266,7 @@ export default {
             var tdtMap_img=new TileLayer({
                 name:'天地图影像图层',
                 source:new XYZ({
-                    url:'http://t0.tianditu.com/DataServer?T=img_w&x={x}&y={y}&l={z}&tk=42dca576db031641be0524ee977ddd04',
+                    url:'http://t0.tianditu.com/DataServer?T=img_w&x={x}&y={y}&l={z}&tk=cc7ce3abb37b17aa5395b13b2980287e',
                     crossOrigin: 'anonymous',
                     wrapX:false
                 }),
@@ -235,7 +280,7 @@ export default {
             layers: [new TileLayer({
                 name:'天地图矢量标记图层',
                 source:new XYZ({
-                    url:'http://t0.tianditu.com/DataServer?T=cva_w&x={x}&y={y}&l={z}&tk=42dca576db031641be0524ee977ddd04',
+                    url:'http://t0.tianditu.com/DataServer?T=cva_w&x={x}&y={y}&l={z}&tk=cc7ce3abb37b17aa5395b13b2980287e',
                     wrapX:false
                 })
             })],
@@ -312,7 +357,12 @@ export default {
            }else{
                ele.innerText=text
            }
+        },
+        exportPdf(){},
+        cancelPdf(){
+            this.selectpdf=false
         }
+
 
     }
 
