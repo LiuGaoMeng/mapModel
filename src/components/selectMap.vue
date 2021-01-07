@@ -6,6 +6,26 @@
             <ul ref="layerTree" id="layerTree" class="layerTree"></ul>
         </div>
         <MapTool></MapTool>
+        <Modal v-model='selectpdf' title="pdf选项" @on-ok='exportPdf' @on-cancel='cancelPdf' width="600">
+            <Form>
+                <Row>
+                   
+                    <FormItem label='尺寸'>
+                        <Select v-model='a1'>
+                            <Option v-for='item in pageSize' :value='item.value' :key='item.value'>{{item.name}}</Option>
+                        </Select>
+                    </FormItem>
+                   
+                </Row>
+                <Row>
+                    <FormItem label='分辨率'>
+                        <Select v-model='res'>
+                            <Option v-for='item in resolution' :value='item.value' :key='item.value'>{{item.name}}</Option>
+                        </Select>
+                    </FormItem>
+                </Row>
+            </Form>
+        </Modal>
     </div>
 </template>
 <script>
@@ -18,7 +38,9 @@ import TileWms from "ol/source/TileWMS"
 import {defaults,ZoomToExtent,MousePosition,OverviewMap,ScaleLine} from "ol/control"
 import {createStringXY} from "ol/coordinate"
 import MapTool from "../views/MapTool"
-import bus from "@/utils/bus";
+import bus from "@/utils/bus"
+import {getRenderPixel} from 'ol/render'
+import jsPDF from 'jspdf'
 export default {
     name:'selectMap',
     components: {
@@ -30,11 +52,69 @@ export default {
             layerName:[],
             layerVisibility:[],
             map:null,
+            tdtMap_vec:null,
+            tdtMap_img:null,
+            a1:'a4',
+            selectpdf:false,
+            pageSize:[
+                {
+                    name:'A1',
+                    value:'a1'
+                },
+                {
+                    name:'A2',
+                    value:'a2'
+                },
+                {
+                    name:'A3',
+                    value:'a3'
+                },
+                {
+                    name:'A4',
+                    value:'a4'
+                },
+                {
+                    name:'A5',
+                    value:'a5'
+                },
+            ],
+            dims:{
+                a0: [1189, 841],
+                a1: [841, 594],
+                a2: [594, 420],
+                a3: [420, 297],
+                a4: [297, 210],
+                a5: [210, 148],
+            },
+            res:'72',
+            resolution:[
+                {
+                    value:'72',
+                    name:'72 dpi (fast)'
+                },
+                {
+                    value:'150',
+                    name:'150 dpi'
+                },
+                {
+                    value:'300',
+                    name:'300 dpi (slow)'
+                }
+            ]
         }
     },
     created(){
         bus.$on('mapHander',(type)=>{
+           var  vm=this
+            let map=this.map
              let view=this.map.getView();
+             let mapDiv=this.$refs.mapDiv
+              function mouseEvent(event){
+                  let map=vm.map
+                        mousePosition=map.getEventPixel(event)
+                        map.render()
+                }
+                   
             
             switch(type){
                 case 'fangda':
@@ -48,6 +128,10 @@ export default {
                     alert('当前范围'+extent[0]+","+extent[1]+","+extent[2]+","+extent[3])
                     break;
                 case 'png':
+                    /**
+                     * 
+                     */
+                    //或者使用postcompose
                    this.map.once('rendercomplete',(event)=>{
                       let mapCanvas=document.createElement('canvas')
                       let size=this.map.getSize()
@@ -67,7 +151,6 @@ export default {
                               }
                              
                           })
-                           // 如果浏览器支持msSaveOrOpenBlob方法（也就是使用IE浏览器的时候），那么调用该方法去下载图片
                         //   if (window.navigator.msSaveOrOpenBlob) {
                         //         const bstr = atob(imgUrl.split(',')[1])
                         //         let n = bstr.length
@@ -91,23 +174,86 @@ export default {
                                 a.href = mapCanvas.toDataURL()
                                 a.setAttribute('download', 'map')
                                 a.click()
-                                document.body.removeChild(a)
                           }
                     })
                     this.map.renderSync()
+                    
                     break;
                 case 'pdf':
-                    
+                    this.selectpdf=true
+                   
                     break;
                 case 'watch':
+                     this.tdtMap_img.setVisible(true)
                     
+                    //探查半径
+                    let radius=75
+                    document.addEventListener('keydown', function (evt) {
+                        if (evt.which === 38) {
+                            radius = Math.min(radius + 5, 150);
+                            map.render();
+                            evt.preventDefault();
+                        } else if (evt.which === 40) {
+                            radius = Math.max(radius - 5, 25);
+                            map.render();
+                            evt.preventDefault();
+                        }
+                    });
+                    let mousePosition=null
+                    mapDiv.addEventListener('mousemove',(event)=>{
+                        
+                        mousePosition=this.map.getEventPixel(event)
+                        map.render()
+                    })
+                    //   mapDiv.addEventListener('mousemove',mouseEvent(event,vm))
+                    
+                    mapDiv.addEventListener('mouseout',()=>{
+                        mousePosition=null
+                        map.render()
+                    })
+                   
+
+                    this.tdtMap_img.on('prerender',(event)=>{
+                        let ctx=event.context
+                        let pixelRadio=event.frameState.pixelRadio
+                        ctx.save()
+                        ctx.beginPath()
+                        if(mousePosition){
+                            let pixel=getRenderPixel(event,mousePosition)
+                            let offset=getRenderPixel(event,[mousePosition[0]+radius,mousePosition[1]])
+                            let canvasRadius=Math.sqrt(Math.pow(offset[0]-pixel[0],2)+Math.pow(offset[1]-pixel[1],2))
+                            ctx.arc(pixel[0],pixel[1],canvasRadius,0,2*Math.PI)
+                            ctx.lineWidth=(5*canvasRadius)/radius
+
+                            // ctx.arc(mousePosition[0]*pixelRadio,mousePosition[1]*pixelRadio,radius*pixelRadio,0,2*Math.PI)
+                            // ctx.lineWidth=5*pixelRadio
+                            ctx.strokeStyle='rgb(0,0,0,0,5)'
+                            ctx.stroke()
+                        }
+                        ctx.clip()
+                    })
+
+                    this.tdtMap_img.on('postrender',(event)=>{
+                        let ctx=event.context
+                        ctx.restore()
+                    })
                     break;
+                case 'unwatch':
+                    let c=mapDiv
+                    debugger
+                    mapDiv.removeEventListener('mousemove',mouseEvent())
+                     mapDiv.removeEventListener('mouseout',()=>{
+                       mousePosition=null
+                        map.render()
+                    })
+                    // this.tdtMap_img.un('prerender',this.renderCanvas())
+                    //  this.tdtMap_img.un('postrender')
+
             }
             
 
         })
          bus.$on('mapPicHander',(type)=>{
-            debugger
             switch(type){
                 case 'point':
 
@@ -164,7 +310,7 @@ export default {
     methods: {
         initMap(){
         /*
-         * 比例尺
+         * 比例尺dd
          */
         var scaleLineControl= new ScaleLine({
             // className: 'my-scale-line',
@@ -197,7 +343,7 @@ export default {
                 wrapX: false
             })
         })
-        var tdtMap_vec=new TileLayer({
+        this.tdtMap_vec=new TileLayer({
             name:'天地图矢量图层',
             
             source: new XYZ({
@@ -214,7 +360,7 @@ export default {
                 wrapX:false
             })
         })
-        var tdtMap_img=new TileLayer({
+        this.tdtMap_img=new TileLayer({
             name:'天地图影像图层',
             source:new XYZ({
                 url:'http://t0.tianditu.com/DataServer?T=img_w&x={x}&y={y}&l={z}&tk=42dca576db031641be0524ee977ddd04',
@@ -239,7 +385,7 @@ export default {
         //实例化Map对象
         this.map= new Map({
             target:'mapDiv',
-            layers:[tdtMap_vec,tdtMap_cva,tdtMap_img,tdtMap_cia],
+            layers:[this.tdtMap_vec,tdtMap_cva,this.tdtMap_img,tdtMap_cia],
             view:new View({
                 //地图中心点
                 center:[0,0],
@@ -254,7 +400,12 @@ export default {
         })
         this.map.addControl(scaleLineControl);
         this.loadLayersControl(this.map,'layerTree')
+        /**
+         * 图片点击事件
+         */
+        this.map.on('singleclick',(e)=>{
 
+        })
         },
         /**
          * 加载图层列表数据
@@ -308,7 +459,50 @@ export default {
            }else{
                ele.innerText=text
            }
+        },
+        exportPdf(){
+            
+            let c=this.res
+            let d=this.a1
+            let dim=this.dims[this.a1]
+            let width=Math.round((dim[0]*this.res)/25.4)
+            let height=Math.round((dim[1]*this.res)/25.4)
+            let size=this.map.getSize()
+            let viewResolution=this.map.getView().getResolution()
+            this.map.once('rendercomplete',()=>{
+                let mapCanvas=document.createElement('canvas')
+                mapCanvas.width=width
+                mapCanvas.height=height
+                let mapContext=mapCanvas.getContext('2d')
+                Array.prototype.forEach.call(
+                    document.querySelectorAll('.ol-layer canvas'),(canvas)=>{
+                        if(canvas.width>0){
+                            let opacity=canvas.parentNode.style.opacity
+                            mapContext.globalAlpha=opacity===''?1:Number(opacity)
+                            let transform=canvas.style.transform
+                            let matrix=transform.match(/^matrix\(([^\(]*)\)$/)[1].split(',').map(Number)
+                            CanvasRenderingContext2D.prototype.setTransform.apply(mapContext,matrix)
+                            mapContext.drawImage(canvas,0,0)
+                        }
+                    }
+                )
+                let pdf=new jsPDF('landscape',undefined,this.a1)
+                pdf.addImage(mapCanvas.toDataURL('image/jpeg'),'JPEG',0,0,dim[0],dim[1])
+                pdf.save('map.pdf')
+                this.map.setSize(size)
+                this.map.getView().setResolution(viewResolution)
+
+            })
+            let printSize=[width,height]
+            this.map.setSize(printSize)
+            let scaling=Math.min(width/size[0],height/size[1])
+            this.map.getView().setResolution(viewResolution/scaling)
+            
+        },
+        cancelPdf(){
+            this.selectpdf=false
         }
+        
 
     }
 

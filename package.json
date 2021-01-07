@@ -11,6 +11,7 @@
     "axios": "^0.21.1",
     "core-js": "^3.6.5",
     "iview": "^3.5.4",
+    "jspdf": "^2.2.0",
     "ol": "^6.5.0",
     "view-design": "^4.4.0",
     "vue": "^2.6.11",
@@ -53,7 +54,21 @@
     "parserOptions": {
       "ecmaVersion": 2020
     },
-    "rules": {}
+    "rules": {
+      "generator-star-spacing": "off",
+      "no-tabs": "off",
+      "no-unused-vars": "off",
+      "no-console": "off",
+      "no-irregular-whitespace": "off",
+      "no-debugger": "off",
+      "no-undef": "off",
+      "vue/no-parsing-error": [
+        2,
+        {
+          "x-invalid-end-tag": false
+        }
+      ]
+    }
   },
   "browserslist": [
     "> 1%",
