@@ -40,7 +40,12 @@ import {createStringXY} from "ol/coordinate"
 import MapTool from "../views/MapTool"
 import bus from "@/utils/bus"
 import {getRenderPixel} from 'ol/render'
+import Feature from 'ol/Feature'
 import jsPDF from 'jspdf'
+import {Point,LineString} from 'ol/geom'
+import VectorLayer from 'ol/layer/Vector'
+import VectorSource from 'ol/source/Vector'
+import {Style,Fill,Stroke,Circle} from 'ol/style'
 export default {
     name:'selectMap',
     components: {
@@ -254,11 +259,64 @@ export default {
 
         })
          bus.$on('mapPicHander',(type)=>{
+             let vecLayer=new VectorLayer()
             switch(type){
                 case 'point':
+                    let point=new Feature({
+                        geometry:new Point([11505912.0, 4011415.0])
+                    })
+                    point.setStyle(new Style({
+                        //填充色
+                        fill:new Fill({
+                            color:'rgba(255,255,0.2)'
+                        }),
+                        //边框
+                        stroke:new Stroke({
+                            color:'#ffcc33',
+                            width:2
+                        }),
+                        //形状
+                        image:new Circle({
+                            radius:17,
+                            fill:new Fill({
+                                color:'#ffcc33'
+                            })
+                        })
+                    }))
+                    let vecSource=new VectorSource({
+                        features:[point]
+                    })
+                    // let vecLayer=new VectorLayer({
+                    //     source:vecSource
+                    // })
+                    vecLayer.setSource(vecSource)
+                  
 
                     break;
                 case 'line':
+                    let line=new Feature({
+                        geometry:new LineString([[13047453.0, 3737873.0], [12606072.0, 2650934.0]])
+                    })
+                    line.setStyle(new Style({
+                        fill:new Fill({
+                            color:'rgba(255,255,0.2)'
+                        }),
+                        stroke:new Stroke({
+                            color:'#ffcc33',
+                            width:5
+                        }),
+                        image:new Circle({
+                            radius:7,
+                            fill:new Fill({
+                                color:'#ffcc33'
+                            })
+                        })
+                    }))
+                    let lineSource=new VectorSource({
+                        features:[line]
+                    })
+                    vecLayer.setSource(lineSource)
+
                     
                     break;
                 case 'circle':
@@ -276,7 +334,9 @@ export default {
                 case 'draw2':
                     
                     break;
+                 
             }
+             this.map.addLayer(vecLayer)
         })
          bus.$on('mapInfo',(type)=>{
              switch(type){
@@ -379,7 +439,8 @@ export default {
                 source:new XYZ({
                     url:'http://t0.tianditu.com/DataServer?T=cva_w&x={x}&y={y}&l={z}&tk=42dca576db031641be0524ee977ddd04',
                     wrapX:false
-                })
+                }),
+                visible:false
             })],
         })
         //实例化Map对象
@@ -388,9 +449,9 @@ export default {
             layers:[this.tdtMap_vec,tdtMap_cva,this.tdtMap_img,tdtMap_cia],
             view:new View({
                 //地图中心点
-                center:[0,0],
+                center:[12000000, 4000000],
                 // projection: 'EPSG:4326',
-                zoom:4
+                zoom:6
             }),
             controls:defaults({
                 attibuttonOptions:({
