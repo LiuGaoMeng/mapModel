@@ -67,7 +67,7 @@ export default {
                               }
                              
                           })
-                          debugger
+                           // 如果浏览器支持msSaveOrOpenBlob方法（也就是使用IE浏览器的时候），那么调用该方法去下载图片
                         //   if (window.navigator.msSaveOrOpenBlob) {
                         //         const bstr = atob(imgUrl.split(',')[1])
                         //         let n = bstr.length
@@ -84,19 +84,17 @@ export default {
                         //         a.setAttribute('download', 'chart-download')
                         //         a.click()
                         //     }
-                          debugger
                           if(navigator.msSaveBlob){
                               navigator.msSaveBlob(mapCanvas.msToBlob(),'map.png')
                           }else{
-                              debugger
                                const a = document.createElement('a')
                                 a.href = mapCanvas.toDataURL()
                                 a.setAttribute('download', 'map')
                                 a.click()
+                                document.body.removeChild(a)
                           }
                     })
                     this.map.renderSync()
-                    
                     break;
                 case 'pdf':
                     
@@ -190,43 +188,41 @@ export default {
             //未定义坐标的标记
             undefinedHTML: '&nbsp;'
         })
-       
-
-            var tdtMap_cia=new TileLayer({
-                name:'天地图影像标记层',
-                
-                source:new XYZ({
-                    url: "http://t0.tianditu.com/DataServer?T=cia_w&x={x}&y={y}&l={z}&tk=42dca576db031641be0524ee977ddd04",//parent.TiandituKey()为天地图密钥,
-                    crossOrigin: 'anonymous',
-                    wrapX: false
-                })
+        var tdtMap_cia=new TileLayer({
+            name:'天地图影像标记层',
+            
+            source:new XYZ({
+                url: "http://t0.tianditu.com/DataServer?T=cia_w&x={x}&y={y}&l={z}&tk=42dca576db031641be0524ee977ddd04",//parent.TiandituKey()为天地图密钥,
+                crossOrigin: 'anonymous',
+                wrapX: false
             })
-            var tdtMap_vec=new TileLayer({
-                name:'天地图矢量图层',
-                
-                source: new XYZ({
-                    url:"http://t0.tianditu.com/DataServer?T=vec_w&x={x}&y={y}&l={z}&tk=42dca576db031641be0524ee977ddd04",
-                    crossOrigin: 'anonymous',
-                    wrapX:false
-                })
+        })
+        var tdtMap_vec=new TileLayer({
+            name:'天地图矢量图层',
+            
+            source: new XYZ({
+                url:"http://t0.tianditu.com/DataServer?T=vec_w&x={x}&y={y}&l={z}&tk=42dca576db031641be0524ee977ddd04",
+                crossOrigin: 'anonymous',
+                wrapX:false
             })
-            var tdtMap_cva=new TileLayer({
-                name:'天地图矢量标记图层',
-                source:new XYZ({
-                    url:'http://t0.tianditu.com/DataServer?T=cva_w&x={x}&y={y}&l={z}&tk=42dca576db031641be0524ee977ddd04',
-                    crossOrigin: 'anonymous',
-                    wrapX:false
-                })
+        })
+        var tdtMap_cva=new TileLayer({
+            name:'天地图矢量标记图层',
+            source:new XYZ({
+                url:'http://t0.tianditu.com/DataServer?T=cva_w&x={x}&y={y}&l={z}&tk=42dca576db031641be0524ee977ddd04',
+                crossOrigin: 'anonymous',
+                wrapX:false
             })
-            var tdtMap_img=new TileLayer({
-                name:'天地图影像图层',
-                source:new XYZ({
-                    url:'http://t0.tianditu.com/DataServer?T=img_w&x={x}&y={y}&l={z}&tk=42dca576db031641be0524ee977ddd04',
-                    crossOrigin: 'anonymous',
-                    wrapX:false
-                }),
-                visible:false
-            })
+        })
+        var tdtMap_img=new TileLayer({
+            name:'天地图影像图层',
+            source:new XYZ({
+                url:'http://t0.tianditu.com/DataServer?T=img_w&x={x}&y={y}&l={z}&tk=42dca576db031641be0524ee977ddd04',
+                crossOrigin: 'anonymous',
+                wrapX:false
+            }),
+            visible:false
+        })
              /**
          * 鹰眼
          */
@@ -240,24 +236,24 @@ export default {
                 })
             })],
         })
-            //实例化Map对象
-            this.map= new Map({
-                target:'mapDiv',
-                layers:[tdtMap_vec,tdtMap_cva,tdtMap_img,tdtMap_cia],
-                view:new View({
-                    //地图中心点
-                    center:[0,0],
-                    // projection: 'EPSG:4326',
-                    zoom:4
-                }),
-                controls:defaults({
-                    attibuttonOptions:({
-                        collapsible: true
-                    })
-                }).extend([mousePositionControl,overviewMap])
-            })
-            this.map.addControl(scaleLineControl);
-            this.loadLayersControl(this.map,'layerTree')
+        //实例化Map对象
+        this.map= new Map({
+            target:'mapDiv',
+            layers:[tdtMap_vec,tdtMap_cva,tdtMap_img,tdtMap_cia],
+            view:new View({
+                //地图中心点
+                center:[0,0],
+                // projection: 'EPSG:4326',
+                zoom:4
+            }),
+            controls:defaults({
+                attibuttonOptions:({
+                    collapsible: true
+                })
+            }).extend([mousePositionControl,overviewMap])
+        })
+        this.map.addControl(scaleLineControl);
+        this.loadLayersControl(this.map,'layerTree')
 
         },
         /**

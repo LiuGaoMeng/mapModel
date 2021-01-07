@@ -9,7 +9,7 @@
                     <DropdownItem name='fangda'>放大</DropdownItem>
                     <DropdownItem name='suoxiao'>缩小</DropdownItem>
                     <DropdownItem name='extent'>当前范围</DropdownItem>
-                    <DropdownItem name='png'>导出成图片</DropdownItem>
+                    <DropdownItem name='png' id="png">导出成图片</DropdownItem>
                     <DropdownItem name='pdf'>导出成PDF</DropdownItem>
                      <DropdownItem name='watch'>地图探查</DropdownItem>
                 </DropdownMenu>
