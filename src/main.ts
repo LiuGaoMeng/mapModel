@@ -4,9 +4,8 @@ import router from './router'
 import store from './store'
 import ViewUI from 'view-design'
 import bus from 'vue-bus'
-Vue.use(bus)
-
 import 'view-design/dist/styles/iview.css'
+Vue.use(bus)
 Vue.use(ViewUI)
 
 Vue.config.productionTip = false

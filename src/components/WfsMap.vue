@@ -17,7 +17,6 @@ import axios from 'axios'
 import MousePosition from 'ol/control/MousePosition'
 import {createStringXY as createStringXY }from 'ol/coordinate'
 import {defaults} from 'ol/control';
-import ol from 'ol'
 
 export default {
   name: 'wfsmap',

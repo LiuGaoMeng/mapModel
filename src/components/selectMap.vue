@@ -30,6 +30,7 @@
 </template>
 <script>
 import"ol/ol.css"
+
 import Map from "ol/Map"
 import View from "ol/View"
 import TileLayer from "ol/layer/Tile"
@@ -38,14 +39,17 @@ import TileWms from "ol/source/TileWMS"
 import {defaults,ZoomToExtent,MousePosition,OverviewMap,ScaleLine} from "ol/control"
 import {createStringXY} from "ol/coordinate"
 import MapTool from "../views/MapTool"
-import bus from "@/utils/bus"
 import {getRenderPixel} from 'ol/render'
 import Feature from 'ol/Feature'
 import jsPDF from 'jspdf'
 import {Point,LineString} from 'ol/geom'
+import geomCirCle from 'ol/geom/Circle'
 import VectorLayer from 'ol/layer/Vector'
 import VectorSource from 'ol/source/Vector'
 import {Style,Fill,Stroke,Circle} from 'ol/style'
+import * as ol from "@/utils/ol"
+
+import bus from "@/utils/bus"
 export default {
     name:'selectMap',
     components: {
@@ -321,8 +325,37 @@ export default {
                     break;
                 case 'circle':
                     
+                    let cirCle=new Feature({
+                        geometry:new geomCirCle([12606072.0, 2650934.0],100000)
+                    })
+                    cirCle.setStyle(new Style({
+                        fill:new Fill({
+                            color:'rgba(255,255,255,0.5)'
+                        }),
+                        stroke:new Stroke({
+                            color:'#ffcc33',
+                            width:6
+                        }),
+                        image:new Circle({
+                            radius:7,
+                            fill:new Fill({
+                                color:'#ffcc33'
+                            })
+                        })
+                    }))
+                    let source=new VectorSource({
+                        features:[cirCle]
+                    })
+                    vecLayer.setSource(source)
+                    
                     break;
                 case 'rectange1':
+                    debugger
+                    console.log(ol.geom)
+                    let squreCircle=new ol.geom.Circle([9871995.0, 4344069.0], 1000000)
+                    let square=new ol.Feature({
+                        geometry:new ol.geom.Polygon.fromCircle(squreCircle,4,150)
+                    })
                     
                     break;
                 case 'rectange2':
@@ -449,7 +482,7 @@ export default {
             layers:[this.tdtMap_vec,tdtMap_cva,this.tdtMap_img,tdtMap_cia],
             view:new View({
                 //地图中心点
-                center:[12000000, 4000000],
+                center:[12606072.0, 2650934.0],
                 // projection: 'EPSG:4326',
                 zoom:6
             }),
