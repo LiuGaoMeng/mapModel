@@ -42,13 +42,13 @@ import MapTool from "../views/MapTool"
 import {getRenderPixel} from 'ol/render'
 import Feature from 'ol/Feature'
 import jsPDF from 'jspdf'
-import {Point,LineString} from 'ol/geom'
+import {Point,LineString,Polygon,Circle as CirCle } from 'ol/geom'
+import {fromCircle,fromExtent} from 'ol/geom/Polygon'
 import geomCirCle from 'ol/geom/Circle'
 import VectorLayer from 'ol/layer/Vector'
 import VectorSource from 'ol/source/Vector'
 import {Style,Fill,Stroke,Circle} from 'ol/style'
-import * as ol from "@/utils/ol"
-
+import {Draw, Modify, Snap} from 'ol/interaction'
 import bus from "@/utils/bus"
 export default {
     name:'selectMap',
@@ -59,6 +59,9 @@ export default {
         return{
             layer:[],
             layerName:[],
+            type:'',
+            draw:null,
+            snap:null,
             layerVisibility:[],
             map:null,
             tdtMap_vec:null,
@@ -119,10 +122,10 @@ export default {
              let view=this.map.getView();
              let mapDiv=this.$refs.mapDiv
               function mouseEvent(event){
-                  let map=vm.map
-                        mousePosition=map.getEventPixel(event)
-                        map.render()
-                }
+                let map=vm.map
+                mousePosition=map.getEventPixel(event)
+                map.render()
+            }
                    
             
             switch(type){
@@ -249,7 +252,7 @@ export default {
                     break;
                 case 'unwatch':
                     let c=mapDiv
-                    debugger
+                    
                     mapDiv.removeEventListener('mousemove',mouseEvent())
                      mapDiv.removeEventListener('mouseout',()=>{
                        mousePosition=null
@@ -262,113 +265,110 @@ export default {
             
 
         })
-         bus.$on('mapPicHander',(type)=>{
+        bus.$on('mapPicHander',(type)=>{
+            debugger
+            console.log('1111')
+           
+             
              let vecLayer=new VectorLayer()
+              /**
+               * 画几何图形
+               */
+             
+            // this.removeInteraction(this.map,draw,snap)
+
+             let drawSource=new VectorSource()
+             let drawLayer=new VectorLayer({
+                 source:drawSource,
+                 style:new Style({
+                     fill: new Fill({
+                        color: 'rgba(255, 255, 255, 0.2)',
+                    }),
+                    stroke: new Stroke({
+                        color: 'black',
+                        width: 2,
+                    }),
+                    image: new Circle({
+                        radius: 7,
+                        fill: new Fill({
+                            color: 'black',
+                        })
+                    })
+                 })
+             })
+             let modify=new Modify({source:drawSource})
+             this.map.addInteraction(modify)
             switch(type){
-                case 'point':
-                    let point=new Feature({
-                        geometry:new Point([11505912.0, 4011415.0])
-                    })
-                    point.setStyle(new Style({
-                        //填充色
-                        fill:new Fill({
-                            color:'rgba(255,255,0.2)'
-                        }),
-                        //边框
-                        stroke:new Stroke({
-                            color:'#ffcc33',
-                            width:2
-                        }),
-                        //形状
-                        image:new Circle({
-                            radius:17,
-                            fill:new Fill({
-                                color:'#ffcc33'
-                            })
-                        })
-                    }))
+                case 'pointDraw':
+                    //点
+                    let point=this.pointXY()
+                    
+                    //线
+                    let line=this.lineXY()
+
+                    //圆
+                    let cirCle=this.circleXY()
+
+                    //矩形
+                    let square1=this.rectangeXY()
+
+                    //矩形
+                    let Rectangle=this.rectangleXY()
+
+                    //三角形
+                    let triangle=this.triangleXY()
+
+                    
                     let vecSource=new VectorSource({
-                        features:[point]
+                        features:[point,line,cirCle,square1,Rectangle,triangle]
                     })
-                    // let vecLayer=new VectorLayer({
-                    //     source:vecSource
-                    // })
                     vecLayer.setSource(vecSource)
-                  
-
                     break;
-                case 'line':
-                    let line=new Feature({
-                        geometry:new LineString([[13047453.0, 3737873.0], [12606072.0, 2650934.0]])
-                    })
-                    line.setStyle(new Style({
-                        fill:new Fill({
-                            color:'rgba(255,255,0.2)'
-                        }),
-                        stroke:new Stroke({
-                            color:'#ffcc33',
-                            width:5
-                        }),
-                        image:new Circle({
-                            radius:7,
-                            fill:new Fill({
-                                color:'#ffcc33'
-                            })
-                        })
-                    }))
-                    let lineSource=new VectorSource({
-                        features:[line]
-                    })
-                    vecLayer.setSource(lineSource)
-
+                case 'clearXY':
+                    let c=this.map
                     
-                    break;
-                case 'circle':
-                    
-                    let cirCle=new Feature({
-                        geometry:new geomCirCle([12606072.0, 2650934.0],100000)
-                    })
-                    cirCle.setStyle(new Style({
-                        fill:new Fill({
-                            color:'rgba(255,255,255,0.5)'
-                        }),
-                        stroke:new Stroke({
-                            color:'#ffcc33',
-                            width:6
-                        }),
-                        image:new Circle({
-                            radius:7,
-                            fill:new Fill({
-                                color:'#ffcc33'
-                            })
-                        })
-                    }))
-                    let source=new VectorSource({
-                        features:[cirCle]
-                    })
-                    vecLayer.setSource(source)
-                    
-                    break;
-                case 'rectange1':
-                    debugger
-                    console.log(ol.geom)
-                    let squreCircle=new ol.geom.Circle([9871995.0, 4344069.0], 1000000)
-                    let square=new ol.Feature({
-                        geometry:new ol.geom.Polygon.fromCircle(squreCircle,4,150)
+                    vecLayer.getSource().removeFeature()
+                    break
+                case 'drawPoint':
+                    this.draw=new Draw({
+                        source:drawSource,
+                        type:'Point'
                     })
                     
                     break;
-                case 'rectange2':
+                case 'drawLine':
+                    this.draw=new Draw({
+                        source:drawSource,
+                        type:'LineString'
+                    })
                     
                     break;
-                case 'draw1':
+                case 'drawPolygon':
+                     this.draw=new Draw({
+                        source:drawSource,
+                        type:'Polygon'
+                    })
                     
                     break;
-                case 'draw2':
+                case 'drawCircle':
+                    this.draw=new Draw({
+                        source:drawSource,
+                        type:'Circle'
+                    })
                     
                     break;
                  
             }
+            /**
+             * 几何图形
+             */
+            this.map.addInteraction(this.draw)
+                this.snap=new Snap({
+                    source:drawSource
+            })
+            this.map.addInteraction(this.snap)
+            this.map.addLayer(drawLayer)
+
              this.map.addLayer(vecLayer)
         })
          bus.$on('mapInfo',(type)=>{
@@ -391,6 +391,20 @@ export default {
             }
             
         })
+    
+    
+    
+    
+    bus.$on('removeInteraction',(type)=>{
+        debugger
+         console.log('2222')
+         if(this.draw!=null&&this.snap!=null){
+             this.map.removeInteraction(this.draw)
+            this.map.removeInteraction(this.snap)
+            // this.map.addInteraction()
+            }
+
+    })
     },
       beforeDestroy() {
         bus.$off("mapHander")
@@ -400,6 +414,15 @@ export default {
     mounted(){
         this.initMap()
     },
+    // watch:{
+    //     type:function (newQuestion, oldQuestion) {
+    //         debugger
+           
+    //          this.map.removeInteraction(this.draw)
+    //         this.map.removeInteraction(this.snap)
+    //         this.map.addInteraction()
+    //     }
+    // },
     methods: {
         initMap(){
         /*
@@ -595,6 +618,140 @@ export default {
         },
         cancelPdf(){
             this.selectpdf=false
+        },
+        pointXY(){
+            let point=new Feature({
+                        geometry:new Point([11505912.0, 4011415.0])
+                })
+            point.setStyle(new Style({
+                //填充色
+                fill:new Fill({
+                    color:'rgba(255,255,0.2)'
+                }),
+                //边框
+                stroke:new Stroke({
+                    color:'#ffcc33',
+                    width:2
+                }),
+                //形状
+                image:new Circle({
+                    radius:17,
+                    fill:new Fill({
+                        color:'#ffcc33'
+                    })
+                })
+            }))
+            return point;
+        },
+        lineXY(){
+            let line=new Feature({
+                    geometry:new LineString([[13047453.0, 3737873.0], [12606072.0, 2650934.0]])
+                })
+            line.setStyle(new Style({
+                fill:new Fill({
+                    color:'rgba(255,255,0.2)'
+                }),
+                stroke:new Stroke({
+                    color:'#ffcc33',
+                    width:5
+                }),
+                image:new Circle({
+                    radius:7,
+                    fill:new Fill({
+                        color:'#ffcc33'
+                    })
+                })
+            }))
+            return line
+        },
+        circleXY(){
+             let cirCle=new Feature({
+                geometry:new geomCirCle([12606072.0, 2650934.0],100000)
+            })
+            cirCle.setStyle(new Style({
+                fill:new Fill({
+                    color:'rgba(255,255,255,0.5)'
+                }),
+                stroke:new Stroke({
+                    color:'#ffcc33',
+                    width:6
+                }),
+                image:new Circle({
+                    radius:7,
+                    fill:new Fill({
+                        color:'#ffcc33'
+                    })
+                })
+            }))
+            return cirCle
+        },
+        rectangeXY(){
+            let squreCircle=new CirCle([13047453.0, 3737873.0], 100000)
+            let square=new Feature({
+                geometry:new fromCircle(squreCircle,4,150)
+            })
+            square.setStyle(
+                new Style({
+                    fill:new Fill({
+                        color:'rgba(255,255,255,0.8)'
+                    }),
+                    stroke:new Stroke({
+                        color:'red',
+                        width:2
+                    }),
+                    image:new Circle({
+                        radius:7,
+                        fill:new Fill({
+                            color:'#ffcc33'
+                        })
+                    })
+                })
+                
+            )
+            return square
+
+        },
+        rectangleXY(){
+            let rectangle=new Feature({
+                geometry:new fromExtent([12606072.0, 2650934.0, 13047453.0, 3737873.0])
+            })
+            rectangle.setStyle(new Style({
+                fill:new Fill({
+                    color:'rgba(255,255,255,0.5)'
+                }),
+                stroke:new Stroke({
+                    color:'green'
+                }),
+                image:new Circle({
+                    radius:7,
+                    fill:new Fill({
+                        color:'#ffcc33'
+                    })
+                })
+            }))
+            return rectangle
+        },
+        triangleXY(){
+            let triangle=new Feature({
+                geometry:new Polygon([[[11505912.0, 4011415.0], [12689769.0, 5107216.0], [13002855.0, 3522218.0]]])
+            })
+            triangle.setStyle(new Style({
+                fill:new Fill({
+                    color:'rgba(255,255,255,0.5)'
+                }),
+                stroke:new Stroke({
+                    color:'#ffcc33',
+                    width:2
+                }),
+                image:new Circle({
+                    radius:7,
+                    fill:new Fill({
+                        color:'#ffcc33'
+                    })
+                })
+            }))
+            return triangle
+
         }
         
 

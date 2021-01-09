@@ -20,13 +20,13 @@
                     <Icon type='ios-arrow-down'></Icon>
                 </a>
                 <DropdownMenu slot="list">
-                    <DropdownItem name='point'>坐标单点</DropdownItem>
-                    <DropdownItem name='line'>坐标单线</DropdownItem>
-                    <DropdownItem name='circle'>坐标圆</DropdownItem>
-                    <DropdownItem name='rectange1'>坐标矩形</DropdownItem>
-                    <DropdownItem name='rectange2'>坐标正方形</DropdownItem>
-                    <DropdownItem name='draw1'>绘制几何图形</DropdownItem>
-                    <DropdownItem name='draw2'>绘制任意图形</DropdownItem>
+                    <DropdownItem name='pointDraw'>坐标图形</DropdownItem>
+                     <DropdownItem name='clearXY'>清除坐标图形</DropdownItem>
+                   
+                    <DropdownItem name='drawPoint'>绘制点</DropdownItem>
+                    <DropdownItem name='drawLine'>绘制线</DropdownItem>
+                    <DropdownItem name='drawPolygon'>绘制面</DropdownItem>
+                    <DropdownItem name='drawCircle'>绘制圆</DropdownItem>
                 </DropdownMenu>
             </Dropdown>
             <Dropdown trigger="click" @on-click="mapInfo">
@@ -59,6 +59,7 @@ export default {
 
         },
         mapPicHander(type){
+            bus.$emit("removeInteraction",type)
             bus.$emit("mapPicHander",type)
         },
         mapInfo(type){
