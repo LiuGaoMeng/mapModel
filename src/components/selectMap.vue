@@ -49,6 +49,7 @@ import VectorLayer from 'ol/layer/Vector'
 import VectorSource from 'ol/source/Vector'
 import {Style,Fill,Stroke,Circle} from 'ol/style'
 import {Draw, Modify, Snap} from 'ol/interaction'
+import {createRegularPolygon} from 'ol/interaction/Draw'
 import bus from "@/utils/bus"
 export default {
     name:'selectMap',
@@ -266,17 +267,11 @@ export default {
 
         })
         bus.$on('mapPicHander',(type)=>{
-            debugger
-            console.log('1111')
-           
-             
              let vecLayer=new VectorLayer()
               /**
                * 画几何图形
                */
              
-            // this.removeInteraction(this.map,draw,snap)
-
              let drawSource=new VectorSource()
              let drawLayer=new VectorLayer({
                  source:drawSource,
@@ -355,7 +350,33 @@ export default {
                         source:drawSource,
                         type:'Circle'
                     })
-                    
+                    break;
+                case 'drawSquare':
+                    this.draw=new Draw({
+                        source:drawSource,
+                        type:'Circle',
+                        geometryFunction:createRegularPolygon(4)
+                    })
+                    break;
+                case 'drawBox':
+                    debugger
+                    this.draw=new Draw({
+                        source:drawSource,
+                        type:'LineString',
+                        maxPoints:2,
+                        geometryFunction:(coordinates, geometry)=>{
+                            if(!geometry){
+                                //多边形
+                                geometry=new Polygon(null)
+                            }
+                            let start=coordinates[0]
+                            let end=coordinates[1]
+                            geometry.setCoordinates([
+                                [start,[start[0],end[1]],end,[end[0],start[1]],start]
+                            ])
+                            return geometry
+                        }
+                    })
                     break;
                  
             }
@@ -396,12 +417,9 @@ export default {
     
     
     bus.$on('removeInteraction',(type)=>{
-        debugger
-         console.log('2222')
          if(this.draw!=null&&this.snap!=null){
              this.map.removeInteraction(this.draw)
             this.map.removeInteraction(this.snap)
-            // this.map.addInteraction()
             }
 
     })
@@ -474,7 +492,8 @@ export default {
                 url:'http://t0.tianditu.com/DataServer?T=cva_w&x={x}&y={y}&l={z}&tk=42dca576db031641be0524ee977ddd04',
                 crossOrigin: 'anonymous',
                 wrapX:false
-            })
+            }),
+            
         })
         this.tdtMap_img=new TileLayer({
             name:'天地图影像图层',

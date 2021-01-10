@@ -26,6 +26,8 @@
                     <DropdownItem name='drawPoint'>绘制点</DropdownItem>
                     <DropdownItem name='drawLine'>绘制线</DropdownItem>
                     <DropdownItem name='drawPolygon'>绘制面</DropdownItem>
+                    <DropdownItem name='drawSquare'>绘制正方形</DropdownItem>
+                    <DropdownItem name='drawBox'>绘制矩形</DropdownItem>
                     <DropdownItem name='drawCircle'>绘制圆</DropdownItem>
                 </DropdownMenu>
             </Dropdown>
