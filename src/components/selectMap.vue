@@ -67,6 +67,9 @@ export default {
             map:null,
             tdtMap_vec:null,
             tdtMap_img:null,
+            drawSource:null,
+            drawLayer:null,
+            vecLayerXY:null,
             a1:'a4',
             selectpdf:false,
             pageSize:[
@@ -267,31 +270,31 @@ export default {
 
         })
         bus.$on('mapPicHander',(type)=>{
-             let vecLayer=new VectorLayer()
+            //  let vecLayerXY=new VectorLayer()
               /**
                * 画几何图形
                */
              
-             let drawSource=new VectorSource()
-             let drawLayer=new VectorLayer({
-                 source:drawSource,
-                 style:new Style({
-                     fill: new Fill({
-                        color: 'rgba(255, 255, 255, 0.2)',
-                    }),
-                    stroke: new Stroke({
-                        color: 'black',
-                        width: 2,
-                    }),
-                    image: new Circle({
-                        radius: 7,
-                        fill: new Fill({
-                            color: 'black',
-                        })
-                    })
-                 })
-             })
-             let modify=new Modify({source:drawSource})
+            //  let drawSource=new VectorSource()
+            //  let drawLayer=new VectorLayer({
+            //      source:drawSource,
+            //      style:new Style({
+            //          fill: new Fill({
+            //             color: 'rgba(255, 255, 255, 0.2)',
+            //         }),
+            //         stroke: new Stroke({
+            //             color: 'black',
+            //             width: 2,
+            //         }),
+            //         image: new Circle({
+            //             radius: 7,
+            //             fill: new Fill({
+            //                 color: 'black',
+            //             })
+            //         })
+            //      })
+            //  })
+             let modify=new Modify({source:this.drawSource})
              this.map.addInteraction(modify)
             switch(type){
                 case 'pointDraw':
@@ -317,84 +320,88 @@ export default {
                     let vecSource=new VectorSource({
                         features:[point,line,cirCle,square1,Rectangle,triangle]
                     })
-                    vecLayer.setSource(vecSource)
+                    this.vecLayerXY.setSource(vecSource)
                     break;
                 case 'clearXY':
                     
-                    vecLayer.getSource().removeFeature()
+                    this.vecLayerXY.getSource().clear()
                     break
                 case 'drawPoint':
                     this.draw=new Draw({
-                        source:drawSource,
+                        source:this.drawSource,
                         type:'Point'
                     })
-                    
                     break;
                 case 'drawLine':
                     this.draw=new Draw({
-                        source:drawSource,
+                        source:this.drawSource,
                         type:'LineString'
                     })
                     
                     break;
                 case 'drawPolygon':
                      this.draw=new Draw({
-                        source:drawSource,
+                        source:this.drawSource,
                         type:'Polygon'
                     })
                     
                     break;
                 case 'drawCircle':
                     this.draw=new Draw({
-                        source:drawSource,
+                        source:this.drawSource,
                         type:'Circle'
                     })
                     break;
                 case 'drawSquare':
                     this.draw=new Draw({
-                        source:drawSource,
+                        source:this.drawSource,
                         type:'Circle',
                         geometryFunction:createRegularPolygon(4)
                     })
                     break;
                 case 'drawBox':
-                    debugger
                     this.draw=new Draw({
-                        source:drawSource,
+                        source:this.drawSource,
                         type:'LineString',
-                        // maxPoints:2,
                         geometryFunction:createBox()
-                        // geometryFunction:function(coordinates, geometry){
-                        //     debugger
-                        //     let start=coordinates[0]
-                        //     let end=coordinates[1]
-                            // if(!geometry){
-                            //     //多边形
-                            //     geometry=new Polygon([start,[start[0],end[1]],end,[end[0],start[1]],start])
-                            // }
-                            
-                            // geometry.setCoordinates([
-                            //     [start,[start[0],end[1]],end,[end[0],start[1]],start]
-                            // ])
-                        //     return geometry
-                        // }
                     })
                     break;
+                case 'handLine':
+                    this.draw=new Draw({
+                        source:this.drawSource,
+                        type:'LineString',
+                        freehand:true
+                    })
+                    break
+                case 'handPolygon':
+                    this.draw=new Draw({
+                        source:this.drawSource,
+                        type:'Polygon',
+                        freehand:true
+                    })
+                    break
+                case 'cleardraw':
+                    this.map.removeInteraction(this.draw)
+            this.map.removeInteraction(this.snap)
+                    this.drawLayer.getSource().clear()
+                    break
                  
             }
             /**
              * 几何图形
              */
-            if(this.draw!=null){
+            if(this.draw!=null&&type!='cleardraw'){
                 this.map.addInteraction(this.draw)
                     this.snap=new Snap({
-                        source:drawSource
+                        source:this.drawSource
                 })
                 this.map.addInteraction(this.snap)
-                this.map.addLayer(drawLayer)
+                //  this.map.addLayer(this.drawLayer)
+               
+                
             }
-
-             this.map.addLayer(vecLayer)
+            
+            //  this.map.addLayer(this.vecLayerXY)
         })
          bus.$on('mapInfo',(type)=>{
              switch(type){
@@ -546,6 +553,38 @@ export default {
         this.map.on('singleclick',(e)=>{
 
         })
+
+        /**
+         * 初始化绘画图层
+         */
+
+        //绘画图层
+        this.drawSource=new VectorSource()
+        this.drawLayer=new VectorLayer({
+            source:this.drawSource,
+            style:new Style({
+                fill: new Fill({
+                color: 'rgba(255, 255, 255, 0.2)',
+            }),
+            stroke: new Stroke({
+                color: 'black',
+                width: 2,
+            }),
+            image: new Circle({
+                radius: 7,
+                fill: new Fill({
+                    color: 'black',
+                })
+            })
+            })
+        })
+        //坐标图层
+        this.vecLayerXY=new VectorLayer()
+        this.map.addLayer(this.drawLayer)
+         this.map.addLayer(this.vecLayerXY)
+
+
+
         },
         /**
          * 加载图层列表数据
