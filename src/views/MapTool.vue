@@ -29,6 +29,7 @@
                     <DropdownItem name='drawSquare'>绘制正方形</DropdownItem>
                     <DropdownItem name='drawBox'>绘制矩形</DropdownItem>
                     <DropdownItem name='drawCircle'>绘制圆</DropdownItem>
+                    <DropdownItem name='closeDraw'>关闭绘制</DropdownItem>
                 </DropdownMenu>
             </Dropdown>
             <Dropdown trigger="click" @on-click="mapInfo">
