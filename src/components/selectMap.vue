@@ -49,7 +49,7 @@ import VectorLayer from 'ol/layer/Vector'
 import VectorSource from 'ol/source/Vector'
 import {Style,Fill,Stroke,Circle} from 'ol/style'
 import {Draw, Modify, Snap} from 'ol/interaction'
-import {createRegularPolygon} from 'ol/interaction/Draw'
+import {createRegularPolygon,createBox} from 'ol/interaction/Draw'
 import bus from "@/utils/bus"
 export default {
     name:'selectMap',
@@ -320,7 +320,6 @@ export default {
                     vecLayer.setSource(vecSource)
                     break;
                 case 'clearXY':
-                    let c=this.map
                     
                     vecLayer.getSource().removeFeature()
                     break
@@ -363,19 +362,22 @@ export default {
                     this.draw=new Draw({
                         source:drawSource,
                         type:'LineString',
-                        maxPoints:2,
-                        geometryFunction:(coordinates, geometry)=>{
-                            if(!geometry){
-                                //多边形
-                                geometry=new Polygon(null)
-                            }
-                            let start=coordinates[0]
-                            let end=coordinates[1]
-                            geometry.setCoordinates([
-                                [start,[start[0],end[1]],end,[end[0],start[1]],start]
-                            ])
-                            return geometry
-                        }
+                        // maxPoints:2,
+                        geometryFunction:createBox()
+                        // geometryFunction:function(coordinates, geometry){
+                        //     debugger
+                        //     let start=coordinates[0]
+                        //     let end=coordinates[1]
+                            // if(!geometry){
+                            //     //多边形
+                            //     geometry=new Polygon([start,[start[0],end[1]],end,[end[0],start[1]],start])
+                            // }
+                            
+                            // geometry.setCoordinates([
+                            //     [start,[start[0],end[1]],end,[end[0],start[1]],start]
+                            // ])
+                        //     return geometry
+                        // }
                     })
                     break;
                  
@@ -383,12 +385,14 @@ export default {
             /**
              * 几何图形
              */
-            this.map.addInteraction(this.draw)
-                this.snap=new Snap({
-                    source:drawSource
-            })
-            this.map.addInteraction(this.snap)
-            this.map.addLayer(drawLayer)
+            if(this.draw!=null){
+                this.map.addInteraction(this.draw)
+                    this.snap=new Snap({
+                        source:drawSource
+                })
+                this.map.addInteraction(this.snap)
+                this.map.addLayer(drawLayer)
+            }
 
              this.map.addLayer(vecLayer)
         })
