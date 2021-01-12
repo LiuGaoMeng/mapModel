@@ -31,6 +31,7 @@
                     <DropdownItem name='handLine'>画线</DropdownItem>
                     <DropdownItem name='handPolygon'>画面</DropdownItem>
                     <DropdownItem name='closeDraw'>关闭绘制</DropdownItem>
+                    <DropdownItem name='stopDraw'>停止闭绘制</DropdownItem>0
                     <DropdownItem name='cleardraw'>清除绘画图形</DropdownItem>
                     <DropdownItem name='openUpdate'>启动修改</DropdownItem>
                     <DropdownItem name='closeUpdate'>关闭修改</DropdownItem>
