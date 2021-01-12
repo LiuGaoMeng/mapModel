@@ -21,14 +21,17 @@
                 </a>
                 <DropdownMenu slot="list">
                     <DropdownItem name='pointDraw'>坐标图形</DropdownItem>
-                     <DropdownItem name='clearXY'>清除坐标图形</DropdownItem>
-                   
+                    <DropdownItem name='clearXY'>清除坐标图形</DropdownItem>
                     <DropdownItem name='drawPoint'>绘制点</DropdownItem>
                     <DropdownItem name='drawLine'>绘制线</DropdownItem>
                     <DropdownItem name='drawPolygon'>绘制面</DropdownItem>
                     <DropdownItem name='drawSquare'>绘制正方形</DropdownItem>
                     <DropdownItem name='drawBox'>绘制矩形</DropdownItem>
                     <DropdownItem name='drawCircle'>绘制圆</DropdownItem>
+                    <DropdownItem name='handLine'>画线</DropdownItem>
+                    <DropdownItem name='handPolygon'>画面</DropdownItem>
+                    <DropdownItem name='cleardraw'>清除绘画图形</DropdownItem>
+
                 </DropdownMenu>
             </Dropdown>
             <Dropdown trigger="click" @on-click="mapInfo">
