@@ -385,12 +385,22 @@ export default {
             this.map.removeInteraction(this.snap)
                     this.drawLayer.getSource().clear()
                     break
+                case 'closeDraw':
+                    let c=this.draw
+                    let d=this.snap
+                    debugger
+                    if(this.draw!=null&&this.snap!=null){
+                        this.map.removeInteraction(this.draw)
+                        this.map.removeInteraction(this.snap)
+                    }
+
+                    break
                  
             }
             /**
              * 几何图形
              */
-            if(this.draw!=null&&type!='cleardraw'){
+            if(this.draw!=null&&type!='cleardraw'&&type!='closeDraw'){
                 this.map.addInteraction(this.draw)
                     this.snap=new Snap({
                         source:this.drawSource

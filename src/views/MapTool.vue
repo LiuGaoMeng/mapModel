@@ -30,8 +30,9 @@
                     <DropdownItem name='drawCircle'>绘制圆</DropdownItem>
                     <DropdownItem name='handLine'>画线</DropdownItem>
                     <DropdownItem name='handPolygon'>画面</DropdownItem>
+                    <DropdownItem name='closeDraw'>关闭绘制</DropdownItem>
                     <DropdownItem name='cleardraw'>清除绘画图形</DropdownItem>
-
+                    
                 </DropdownMenu>
             </Dropdown>
             <Dropdown trigger="click" @on-click="mapInfo">
