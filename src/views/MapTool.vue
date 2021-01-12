@@ -32,6 +32,10 @@
                     <DropdownItem name='handPolygon'>画面</DropdownItem>
                     <DropdownItem name='closeDraw'>关闭绘制</DropdownItem>
                     <DropdownItem name='cleardraw'>清除绘画图形</DropdownItem>
+                    <DropdownItem name='openUpdate'>启动修改</DropdownItem>
+                    <DropdownItem name='closeUpdate'>关闭修改</DropdownItem>
+                    
+
                     
                 </DropdownMenu>
             </Dropdown>

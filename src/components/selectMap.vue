@@ -48,7 +48,7 @@ import geomCirCle from 'ol/geom/Circle'
 import VectorLayer from 'ol/layer/Vector'
 import VectorSource from 'ol/source/Vector'
 import {Style,Fill,Stroke,Circle} from 'ol/style'
-import {Draw, Modify, Snap} from 'ol/interaction'
+import {Draw, Modify, Snap,Interaction} from 'ol/interaction'
 import {createRegularPolygon,createBox} from 'ol/interaction/Draw'
 import bus from "@/utils/bus"
 export default {
@@ -65,6 +65,7 @@ export default {
             snap:null,
             layerVisibility:[],
             map:null,
+            modify:null,
             tdtMap_vec:null,
             tdtMap_img:null,
             drawSource:null,
@@ -382,25 +383,29 @@ export default {
                     break
                 case 'cleardraw':
                     this.map.removeInteraction(this.draw)
-            this.map.removeInteraction(this.snap)
+                    this.map.removeInteraction(this.snap)
                     this.drawLayer.getSource().clear()
                     break
                 case 'closeDraw':
-                    let c=this.draw
-                    let d=this.snap
-                    debugger
                     if(this.draw!=null&&this.snap!=null){
                         this.map.removeInteraction(this.draw)
                         this.map.removeInteraction(this.snap)
                     }
-
+                    break
+                case 'openUpdate':
+                    this.map.addInteraction(this.modify)
+                    break
+                case 'closeUpdate':
+                    this.map.removeInteraction(this.draw)
+                    this.map.removeInteraction(this.snap)
+                    this.map.removeInteraction(this.modify)
                     break
                  
             }
             /**
              * 几何图形
              */
-            if(this.draw!=null&&type!='cleardraw'&&type!='closeDraw'){
+            if(this.draw!=null&&type!='cleardraw'&&type!='closeDraw'&&type!='closeUpdate'){
                 this.map.addInteraction(this.draw)
                     this.snap=new Snap({
                         source:this.drawSource
@@ -438,9 +443,9 @@ export default {
     
     
     bus.$on('removeInteraction',(type)=>{
-         if(this.draw!=null&&this.snap!=null){
+         if(this.draw!=null&&this.snap!=null&&this.modify!=null){
              this.map.removeInteraction(this.draw)
-            this.map.removeInteraction(this.snap)
+             this.map.removeInteraction(this.snap)
             }
 
     })
@@ -591,10 +596,12 @@ export default {
         //坐标图层
         this.vecLayerXY=new VectorLayer()
         this.map.addLayer(this.drawLayer)
-         this.map.addLayer(this.vecLayerXY)
-
-
-
+        this.map.addLayer(this.vecLayerXY)
+         /**
+          * 修改拖拽图层--绘画图层
+          */
+        this.modify=new Modify({source:this.drawSource})
+        this.map.addInteraction(this.modify)
         },
         /**
          * 加载图层列表数据
