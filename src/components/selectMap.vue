@@ -295,8 +295,8 @@ export default {
             //         })
             //      })
             //  })
-             let modify=new Modify({source:this.drawSource})
-             this.map.addInteraction(modify)
+            //  let modify=new Modify({source:this.drawSource})
+            //  this.map.addInteraction(modify)
             switch(type){
                 case 'pointDraw':
                     //点
@@ -393,11 +393,14 @@ export default {
                     }
                     break
                 case 'openUpdate':
+                     this.modify.setActive(true)
                     this.map.addInteraction(this.modify)
                     break
                 case 'closeUpdate':
-                    this.map.removeInteraction(this.draw)
-                    this.map.removeInteraction(this.snap)
+                   
+                    // this.map.removeInteraction(this.draw)
+                    // this.map.removeInteraction(this.snap)
+                    this.modify.setActive(false)
                     this.map.removeInteraction(this.modify)
                     break
                  
@@ -501,11 +504,11 @@ export default {
                 url: "http://t0.tianditu.com/DataServer?T=cia_w&x={x}&y={y}&l={z}&tk=42dca576db031641be0524ee977ddd04",//parent.TiandituKey()为天地图密钥,
                 crossOrigin: 'anonymous',
                 wrapX: false
-            })
+            }),
+             visible:false
         })
         this.tdtMap_vec=new TileLayer({
             name:'天地图矢量图层',
-            
             source: new XYZ({
                 url:"http://t0.tianditu.com/DataServer?T=vec_w&x={x}&y={y}&l={z}&tk=42dca576db031641be0524ee977ddd04",
                 crossOrigin: 'anonymous',
